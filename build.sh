@@ -75,7 +75,7 @@ COMMAND="
   echo 'Building Left Half...'
   west build -p auto -s zmk/app -b nice_nano/nrf52840/zmk -S studio-rpc-usb-uart -d build/left -- \
     -DSHIELD=\"hshs52_left nice_view_adapter nice_view\" \
-    -DZMK_CONFIG=/app/workspace/config -DCONFIG_ZMK_STUDIO=n \
+    -DZMK_CONFIG=/app/workspace/config -DCONFIG_ZMK_STUDIO=y \
     -DCMAKE_BUILD_TYPE=Release \
      -DCMAKE_C_FLAGS_RELEASE='-O3' \
      -DCMAKE_CXX_FLAGS_RELEASE='-O3'
@@ -85,7 +85,7 @@ COMMAND="
   echo 'Building Right Half...'
   west build -p auto -s zmk/app -b nice_nano/nrf52840/zmk -d build/right -- \
     -DSHIELD=\"hshs52_right nice_view_adapter nice_view\" \
-    -DZMK_CONFIG=/app/workspace/config -DCONFIG_ZMK_STUDIO=n \
+    -DZMK_CONFIG=/app/workspace/config -DCONFIG_ZMK_STUDIO=y \
     -DCMAKE_BUILD_TYPE=Release \
      -DCMAKE_C_FLAGS_RELEASE='-O3' \
      -DCMAKE_CXX_FLAGS_RELEASE='-O3'

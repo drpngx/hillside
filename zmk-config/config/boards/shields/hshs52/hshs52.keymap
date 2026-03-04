@@ -5,6 +5,7 @@
  */
 
 #include <behaviors.dtsi>
+#include <physical_layouts.dtsi>
 #include <dt-bindings/zmk/bt.h>
 #include <dt-bindings/zmk/ext_power.h>
 #include <dt-bindings/zmk/keys.h>
@@ -25,6 +26,69 @@
 
 
 / {
+        chosen {
+                zmk,physical-layout = &physical_layout0;
+        };
+
+        physical_layout0: physical_layout_0 {
+                compatible = "zmk,physical-layout";
+                display-name = "Default Layout";
+                transform = <&default_transform>;
+                kscan = <&kscan0>;
+                keys
+                        = <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        , <&key_physical_attrs 0 0 0 0 0 0 0>
+                        ;
+        };
+
         keymap {
                 compatible = "zmk,keymap";
 
