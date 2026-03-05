@@ -1,4 +1,4 @@
-
+# TODO: use the dimensions here: https://github.com/mmccoyd/hillside/blob/main/hillside52/doc/image/hill52_switches_left.svg
 import json
 import urllib.request
 import re
@@ -42,14 +42,14 @@ def process():
 
     lines = []
     lines.append("                keys")
-    
+
     for i, idx in enumerate(all_keys_indices):
         k = matrix_map[idx]
         x, y = k["x"], k["y"]
         xu = int((x - min_x) * X_SCALE)
         yu = int((y - min_y) * Y_SCALE)
         rot = int(k.get("r", 0) * 1000)
-        
+
         prefix = "                        "
         if i == 0:
             prefix += "/* Row 0 */\n                        = "
@@ -70,7 +70,7 @@ def process():
         lines.append(f"{prefix}<&key_physical_attrs 100 100 {xu:7} {yu:7} {rot:7} 0 0>{comment}")
 
     keys_section = "\n".join(lines) + "\n                        ;"
-    
+
     with open(KEYMAP_PATH, 'r') as f:
         content = f.read()
 
@@ -86,7 +86,7 @@ def process():
 
     with open(KEYMAP_PATH, 'w') as f:
         f.write(new_content)
-    
+
     print(f"Successfully updated {KEYMAP_PATH}")
 
 if __name__ == "__main__":
