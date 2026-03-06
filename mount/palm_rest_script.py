@@ -121,9 +121,50 @@ def create_palm_rest_solid(edge_pts, bbox):
     print(f"Solid volume before drilling: {solid.Volume:.1f}")
     # 5. Drill Holes for M5 DIN 912 screws
     solid = drill_holes(solid, center_x, center_y, bbox.ZMin)
-    print(f"Solid volume after drilling: {solid.Volume:.1f}")
+    print(f"Solid volume after drilling holes: {solid.Volume:.1f}")
+
+    # 6. Scoop Thumb Valley
+    solid = drill_thumb_valley(solid, bbox, center_x, center_y)
+    print(f"Solid volume after thumb valley: {solid.Volume:.1f}")
     
     return solid
+
+def drill_thumb_valley(solid, bbox, cx, cy):
+    """Scoops out a valley from the palm resting area to the thumb keys"""
+    print(f"Scooping thumb valley starting at ({cx:.1f}, {cy:.1f})...")
+
+    # Reference points relative to left half
+    v_z_top = bbox.ZMin + PALM_REST_THICKNESS
+
+    # Increased r_keyboard and decreased r_palm for a "more conic" look
+    # Increased r_keyboard also extends the mouth further
+    r_palm = 20.0
+    r_keyboard = 115.0 
+    length = 220.0
+
+    # 1. Create Cone along Z. Base (r_palm) is at Z=0.
+    scoop = Part.makeCone(r_palm, r_keyboard, length)
+
+    # Scale the cone in X to make it wider horizontally (elliptical cone)
+    mat = FreeCAD.Matrix()
+    mat.scale(1.2, 1.0, 1.0)
+    scoop = scoop.transformGeometry(mat)
+
+    # 2. Point North (-Y) and dive "downwards" into the North
+    # Reduced tilt to make the slope less steep
+    tilt = 8.0 
+    scoop.rotate(FreeCAD.Vector(0,0,0), FreeCAD.Vector(1,0,0), -90 - tilt)
+
+    # 3. Yaw towards the thumb keys (North-East for Left half)
+    # Adjusted yaw to -22 (from -30) to keep the inner edge in place while the scaled X extends the outer edge
+    scoop.rotate(FreeCAD.Vector(0,0,0), FreeCAD.Vector(0,0,1), -22)
+
+    # 4. Position it at the triangle center
+    # Keep the start just above the surface (buffer 2.0mm)
+    scoop.translate(FreeCAD.Vector(cx, cy, v_z_top + r_palm + 2.0))
+
+    return solid.cut(scoop)
+
 
 def drill_holes(solid, cx, cy, z_min):
     """Drills three M5 DIN 912 counterbored holes in an isolateral triangle"""
