@@ -118,6 +118,42 @@ def create_palm_rest_solid(edge_pts, bbox):
     # Z-Align: Put palm rest at the bottom of the case
     solid.translate(FreeCAD.Vector(0, 0, bbox.ZMin))
     
+    print(f"Solid volume before drilling: {solid.Volume:.1f}")
+    # 5. Drill Holes for M5 DIN 912 screws
+    solid = drill_holes(solid, center_x, center_y, bbox.ZMin)
+    print(f"Solid volume after drilling: {solid.Volume:.1f}")
+    
+    return solid
+
+def drill_holes(solid, cx, cy, z_min):
+    """Drills three M5 DIN 912 counterbored holes in an isolateral triangle"""
+    print(f"Drilling vertical holes at center ({cx:.1f}, {cy:.1f})...")
+    
+    # Triangle vertices (Equilateral, side ~35mm)
+    radius = 20.0 
+    hole_pts = []
+    for i in range(3):
+        angle = math.radians(90 + i * 120)
+        px = cx + radius * math.cos(angle)
+        py = cy + radius * math.sin(angle)
+        hole_pts.append(FreeCAD.Vector(px, py, z_min))
+
+    # DIN 912 M5: Head Dia 8.5mm, Head Height 5mm, Screw Dia 5mm
+    # Using 5.5mm for through hole and 10.0mm for counterbore
+    # User requested ~6mm of material remaining ("length of hole")
+    through_dia = 5.5
+    cb_dia = 10.0
+    flange_thickness = 6.0
+    
+    for p in hole_pts:
+        # Through hole
+        thru = Part.makeCylinder(through_dia/2.0, 100, p - FreeCAD.Vector(0,0,10))
+        solid = solid.cut(thru)
+        
+        # Counterbore (from top down, leaving flange_thickness at bottom)
+        cb = Part.makeCylinder(cb_dia/2.0, 100, p + FreeCAD.Vector(0,0,flange_thickness))
+        solid = solid.cut(cb)
+        
     return solid
 
 # ==============================================================================
@@ -162,22 +198,26 @@ combined_right.write(output_right)
 # 4. Top-View Projection using FreeCAD Kernel
 print(f"Generating Verification SVG: {output_svg}")
 try:
-    # Convert back to shape for CAD projection
-    # This proves the holes are present in the final assembly
-    final_shape = Part.Shape()
-    final_shape.makeShapeFromMesh(combined_left.Topology, 0.05)
-    projection = final_shape.project(FreeCAD.Vector(0,0,1))
+    # Slice the palm rest solid at Z=z_min+3 to see the M5 through-holes
+    z_slice = bbox.ZMin + 3.0
+    print(f"Slicing at Z={z_slice:.1f} for verification...")
+    # slice(Normal, Distance) -> distance from origin along normal
+    # The normal is (0,0,1), so distance is the Z value.
+    section = palm_solid.slice(FreeCAD.Vector(0,0,1), z_slice)
+    print(f"Slice edges count: {len(section)}")
     
     # Manual SVG drawing of PROJECTED CAD EDGES
     with open(output_svg, "w") as f:
         f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n')
         f.write('<svg width="1000" height="1000" viewBox="-300 -400 600 600" xmlns="http://www.w3.org/2000/svg">\n')
         f.write('<g transform="scale(3, -3) translate(0, 50)">\n')
-        for edge in projection.Edges:
-            pts = edge.discretize(Number=10)
+        # Add a light rectangle for the case boundary
+        f.write(f'  <rect x="{bbox.XMin}" y="{bbox.YMin}" width="{bbox.XMax - bbox.XMin}" height="{bbox.YMax - bbox.YMin}" fill="none" stroke="gray" stroke-width="0.1" />\n')
+        for edge in section:
+            pts = edge.discretize(Number=40)
             if len(pts) > 1:
                 d = "M " + " L ".join([f"{p.x:.2f},{p.y:.2f}" for p in pts])
-                f.write(f'  <path d="{d}" fill="none" stroke="black" stroke-width="0.1" />\n')
+                f.write(f'  <path d="{d}" fill="none" stroke="blue" stroke-width="0.1" />\n')
         f.write('</g></svg>\n')
     print("Success: Verification image generated.")
 except Exception as e:
