@@ -1,0 +1,29 @@
+module(
+    name = "hillside",
+    version = "0.0.1",
+    compatibility_level = 1,
+)
+
+########## EXTERNAL TOOLS
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+########## PYTHON
+bazel_dep(name = "rules_python", version="1.8.5")
+# This only configures the python used during build. Use `py_runtime` for the executable.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+
+# This must be set to the system python version, because rules_rust uses the system python.
+kPythonVersion = "3.12"
+python.toolchain(python_version = kPythonVersion, is_default = True)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+# Merge it with requirements.txt into requirements_lock.txt
+# bazel run requirements.update
+pip.parse(
+    hub_name = "pip_deps",
+    python_version = kPythonVersion,
+    requirements_lock = "//:requirements_lock.txt",
+)
+use_repo(pip, "pip_deps")
