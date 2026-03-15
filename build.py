@@ -16,7 +16,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ZMK_CONFIG_DIR = os.path.join(SCRIPT_DIR, "zmk-config")
 FIRMWARE_OUTPUT_DIR = os.path.join(ZMK_CONFIG_DIR, "firmware")
 ZMK_WORKSPACE_VOLUME = "zmk-workspace"
-DOCKER_IMAGE = "zmkfirmware/zmk-dev-arm:3.5-branch"
+DOCKER_IMAGE = "zmkfirmware/zmk-dev-arm:4.1-branch"
 
 # Build flags
 LEFT_SHIELD = "hshs52_left nice_view_adapter nice_view"
