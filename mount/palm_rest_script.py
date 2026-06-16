@@ -22,11 +22,73 @@ output_svg = "/data/top_view_projection.svg"
 TARGET_X_INNER = 108.0
 PALM_REST_THICKNESS = 30.0
 # Reducing overlap to prevent material poking through thin walls
-OVERLAP = 0.5 
+OVERLAP = 0.5
+# Extra clearance for assembled case (base + top case walls ~2mm thick)
+CASE_CLEARANCE = 5.0
 
 # ==============================================================================
 # ==                         HELPER FUNCTIONS                                 ==
 # ==============================================================================
+
+def remove_heat_insert_shafts(mesh):
+    """Remove heat-insert shaft posts by converting to solid and cutting them out.
+
+    Mesh facet APIs vary across FreeCAD versions, so instead we:
+    1. Convert the mesh to a Part.Shape solid
+    2. Find shaft locations by slicing above the base plate
+    3. Cut them out with boolean operations
+    4. Convert back to mesh
+    """
+    bbox = mesh.BoundBox
+    z_base = bbox.ZMin
+    z_top = bbox.ZMax
+    height = z_top - z_base
+
+    print(f"Base mesh Z range: {z_base:.2f} to {z_top:.2f} (height {height:.2f})")
+    print(f"Base mesh facet count: {mesh.CountFacets}")
+
+    # Convert mesh to Part.Shape for boolean ops
+    shape = Part.Shape()
+    shape.makeShapeFromMesh(mesh.Topology, 0.1)
+    solid = Part.makeSolid(shape)
+    print(f"Converted mesh to solid, volume: {solid.Volume:.1f}")
+
+    # Slice just above the base plate to find cross-sections of shafts
+    z_slice = z_base + height * 0.5
+    wires = solid.slice(FreeCAD.Vector(0, 0, 1), z_slice)
+    print(f"Slice at Z={z_slice:.2f} found {len(wires)} wire(s)")
+
+    # Each wire is a closed loop. Small loops = shaft cross-sections.
+    shaft_cuts = []
+    for w in wires:
+        bb = w.BoundBox
+        extent = max(bb.XLength, bb.YLength)
+        print(f"  Wire extent: {extent:.1f}mm at ({bb.Center.x:.1f}, {bb.Center.y:.1f})")
+        if extent < 20.0:
+            # This is a shaft — create a cutting cylinder around it
+            cx = bb.Center.x
+            cy = bb.Center.y
+            r = extent / 2.0 + 1.0
+            cyl = Part.makeCylinder(r, height + 2,
+                                    FreeCAD.Vector(cx, cy, z_base - 1))
+            shaft_cuts.append(cyl)
+            print(f"  -> Shaft! Cutting cylinder r={r:.1f} at ({cx:.1f}, {cy:.1f})")
+
+    if not shaft_cuts:
+        print("No shaft features detected")
+        return
+
+    # Boolean cut all shafts from the solid
+    for cyl in shaft_cuts:
+        solid = solid.cut(cyl)
+
+    print(f"Solid volume after shaft removal: {solid.Volume:.1f}")
+
+    # Convert back to mesh, replacing the original
+    new_mesh = Mesh.Mesh(solid.tessellate(0.1))
+    mesh.clear()
+    mesh.addMesh(new_mesh)
+    print(f"Rebuilt mesh with {mesh.CountFacets} facets")
 
 def get_clean_south_edge(mesh, samples=80):
     """Finds the southern-most points, ensuring we follow the outer skin"""
@@ -56,7 +118,7 @@ def create_palm_rest_solid(edge_pts, bbox):
     """Creates a dome-shaped palm rest solid (half-zeppelin)"""
     print("Generating domed palm rest solid...")
     
-    # 1. Start with case edge (slight overlap)
+    # 1. Start with case edge (slight overlap to fuse with case mesh)
     back_boundary = [p + FreeCAD.Vector(0, OVERLAP, 0) for p in edge_pts]
     
     # 2. Inner extension (X+)
@@ -203,6 +265,28 @@ def drill_holes(solid, cx, cy, z_min):
 
 print(f"Loading BASE STL: {input_stl}")
 case_mesh = Mesh.read(input_stl)
+
+# Scale up the case mesh by CASE_CLEARANCE in X/Y to fit the assembled keyboard
+# (base + top case). We scale outward from the mesh center so it grows uniformly.
+raw_bbox = case_mesh.BoundBox
+cx = (raw_bbox.XMin + raw_bbox.XMax) / 2.0
+cy = (raw_bbox.YMin + raw_bbox.YMax) / 2.0
+sx = (raw_bbox.XMax - raw_bbox.XMin + 2 * CASE_CLEARANCE) / (raw_bbox.XMax - raw_bbox.XMin)
+sy = (raw_bbox.YMax - raw_bbox.YMin + 2 * CASE_CLEARANCE) / (raw_bbox.YMax - raw_bbox.YMin)
+mat = FreeCAD.Matrix()
+mat.move(-cx, -cy, 0)
+case_mesh.transform(mat)
+mat = FreeCAD.Matrix()
+mat.scale(sx, sy, 1.0)
+case_mesh.transform(mat)
+mat = FreeCAD.Matrix()
+mat.move(cx, cy, 0)
+case_mesh.transform(mat)
+print(f"Scaled case mesh by +{CASE_CLEARANCE}mm in X/Y to fit assembled case")
+
+# Remove heat-insert shafts that protrude upward from the base plate
+remove_heat_insert_shafts(case_mesh)
+
 bbox = case_mesh.BoundBox
 
 # 1. Create Palm Rest
