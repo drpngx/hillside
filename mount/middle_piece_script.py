@@ -22,6 +22,7 @@ FILLET_RADIUS = 1.0   # Scaled down to match thickness
 
 TENTING_ANGLE = 20.0
 TOE_IN_ANGLE = 15.0
+INWARD_ROTATION_ANGLE = 27.5
 
 HOLE_RADIUS = 20.0
 THROUGH_DIA = 5.5
@@ -107,8 +108,8 @@ def create_middle_piece():
         else:
             cx, cy = max(holes, key=lambda p: p[0])
 
-        # Apply 35 deg rotation (CW for left, CCW for right)
-        rot_angle = math.radians(-35 * -side)
+        # Apply inward rotation (CW for left, CCW for right)
+        rot_angle = math.radians(-INWARD_ROTATION_ANGLE * -side)
         cos_a = math.cos(rot_angle)
         sin_a = math.sin(rot_angle)
 
